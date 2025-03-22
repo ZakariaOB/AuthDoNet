@@ -1,0 +1,6 @@
+@AuthDoNetApi_HostAddress = http://localhost:5152
+
+GET {{AuthDoNetApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

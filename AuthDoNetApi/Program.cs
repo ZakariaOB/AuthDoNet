@@ -5,7 +5,7 @@ var app = builder.Build();
 
 app.MapGet("/username", (HttpContext ctx) =>
 {
-    var cookieHeader = ctx.Request.Headers["Cookie"].ToString(); // Full raw string
+    var cookieHeader = ctx.Request.Headers["Cookie"].ToString();
 
     // Split all cookies by ';' and trim spaces
     var cookies = cookieHeader
@@ -18,7 +18,6 @@ app.MapGet("/username", (HttpContext ctx) =>
     if (authCookie == null)
         return Results.Unauthorized();
 
-    // Parse the value of auth=usr:zakaria
     var userCookie = authCookie.Split('=').Last(); // usr:zakaria
     var userName = userCookie.Split(':').Last();   // zakaria
 

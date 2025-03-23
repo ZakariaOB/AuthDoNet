@@ -31,7 +31,8 @@ app.MapGet("/login", async (HttpContext ctx) =>
     var claims = new List<Claim>
     {
         new Claim(ClaimTypes.Name, userName),
-        new Claim(ClaimTypes.Role, "User")
+        new Claim(ClaimTypes.Role, "User"),
+        new Claim("nationality", "marocain")
     };
 
     var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -43,10 +44,50 @@ app.MapGet("/login", async (HttpContext ctx) =>
 });
 
 // Protected endpoint: requires login
-app.MapGet("/me", [Authorize] (HttpContext ctx) =>
+app.MapGet("/username", [Authorize] (HttpContext ctx) =>
 {
     var userName = ctx.User.Identity?.Name;
-    return Results.Ok(new { userName });
+    return Results.Ok(userName);
+});
+
+app.MapGet("/marocain", (HttpContext ctx) =>
+{
+    if (!ctx.User.Identities.Any(x => x.AuthenticationType == CookieAuthenticationDefaults.AuthenticationScheme))
+    {
+        ctx.Response.StatusCode = 401;
+        return string.Empty;
+    }
+
+    if (!ctx.User.HasClaim("nationality", "marocain"))
+    {
+        ctx.Response.StatusCode = 403;
+        return string.Empty;
+    }
+
+    return "marocain";
+});
+
+app.MapGet("/marrakech", (HttpContext ctx) =>
+{
+    if (!ctx.User.Identities.Any(x => x.AuthenticationType == CookieAuthenticationDefaults.AuthenticationScheme))
+    {
+        ctx.Response.StatusCode = 401;
+        return string.Empty;
+    }
+
+    if (!ctx.User.HasClaim("nationality", "marocain"))
+    {
+        ctx.Response.StatusCode = 403;
+        return string.Empty;
+    }
+
+    return "allowed to marrakech";
+});
+
+app.MapGet("/unsecure", (HttpContext ctx) =>
+{
+    var userName = ctx.User.Identity?.Name;
+    return Results.Ok(userName);
 });
 
 // Optional logout

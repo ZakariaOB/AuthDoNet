@@ -14,7 +14,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("MarocainOnly", policy =>
+        policy.RequireClaim("nationality", "marocain"));
 
 var app = builder.Build();
 
@@ -50,38 +52,14 @@ app.MapGet("/username", [Authorize] (HttpContext ctx) =>
     return Results.Ok(userName);
 });
 
-app.MapGet("/marocain", (HttpContext ctx) =>
+app.MapGet("/marocain", [Authorize(Policy = "MarocainOnly")] () =>
 {
-    if (!ctx.User.Identities.Any(x => x.AuthenticationType == CookieAuthenticationDefaults.AuthenticationScheme))
-    {
-        ctx.Response.StatusCode = 401;
-        return string.Empty;
-    }
-
-    if (!ctx.User.HasClaim("nationality", "marocain"))
-    {
-        ctx.Response.StatusCode = 403;
-        return string.Empty;
-    }
-
-    return "marocain";
+    return Results.Ok("marocain");
 });
 
-app.MapGet("/marrakech", (HttpContext ctx) =>
+app.MapGet("/marrakech", [Authorize(Policy = "MarocainOnly")] () =>
 {
-    if (!ctx.User.Identities.Any(x => x.AuthenticationType == CookieAuthenticationDefaults.AuthenticationScheme))
-    {
-        ctx.Response.StatusCode = 401;
-        return string.Empty;
-    }
-
-    if (!ctx.User.HasClaim("nationality", "marocain"))
-    {
-        ctx.Response.StatusCode = 403;
-        return string.Empty;
-    }
-
-    return "allowed to marrakech";
+    return Results.Ok("allowed to marrakech");
 });
 
 app.MapGet("/unsecure", (HttpContext ctx) =>

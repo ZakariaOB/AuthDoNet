@@ -109,4 +109,26 @@ var fail = protector2.Unprotect(encrypted);      // ❌ Throws exception
 
 
 
+## Policy based Authorization
+
+- In order to authorize an endpoint (/**marocain** one) you can do some manual checks like 
+  ```csharp
+  if (!ctx.User.Identities.Any(...))
+  if (!ctx.User.HasClaim("nationality", "marocain"))
+  ```
+  this will work but you will have to do the same if you need to authorize /**marrakech**.
+
+- A cleaner way is to use policy based authorization 
+    ```csharp
+    builder.Services.AddAuthorization(options =>
+    {
+        options.AddPolicy("MarocainOnly", policy =>
+            policy.RequireClaim("nationality", "marocain"));
+    });
+    app.MapGet("/marocain", [Authorize(Policy = "MarocainOnly")] () =>
+    {
+        return Results.Ok("marocain");
+    });
+    ```
+
 

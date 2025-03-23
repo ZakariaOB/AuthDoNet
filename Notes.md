@@ -98,4 +98,15 @@ var fail = protector2.Unprotect(encrypted);      // ❌ Throws exception
 
 
 
+### Using microsoft cookie schema based authentication
+
+- We can use the authentication cookie based and replace the following
+  - Store the cookie and use the Authentication middlware
+  - Protect and Unprotect the user information
+  - Read back the claims and convert them to a ClaimsPrincipal generating an identity propery of the User .
+  - Possibility of adding the Authorize attribute to verify the IsAuthenticated property .
+  - Check the commit for implementation details .
+
+
+
 

@@ -1,34 +1,59 @@
-using AuthDoNetApi.AuthService;
-using AuthDoNetApi.Middlware;
-using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddDataProtection();
-builder.Services.AddSingleton<IAuthService, AuthService>();
+
+// Register authentication and authorization
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        //options.LoginPath = "/login"; // optional redirect for [Authorize]
+        options.Cookie.Name = "auth"; // cookie name
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+    });
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
-app.UseMiddleware<AuthCookieMiddleware>();
 
-// Login endpoint: sets encrypted cookie
-app.MapGet("/login", (HttpContext ctx, IAuthService authService) =>
+// Enable authentication and authorization middleware
+app.UseAuthentication(); // reads & validates cookie, sets HttpContext.User
+app.UseAuthorization();  // applies [Authorize] attributes
+
+// Login endpoint (simulated)
+app.MapGet("/login", async (HttpContext ctx) =>
 {
-    var protectedToken = authService.ProtectUser("zakaria");
-    ctx.Response.Cookies.Append("auth", protectedToken);
+    // Simulate successful login (in real apps you'd validate credentials)
+    var userName = "zakaria";
 
-    return Results.Ok("Login success");
+    var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.Name, userName),
+        new Claim(ClaimTypes.Role, "User")
+    };
+
+    var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+    var principal = new ClaimsPrincipal(identity);
+
+    await ctx.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
+    return Results.Ok("Login successful. Cookie is now set.");
 });
 
-// Protected endpoint: reads user from HttpContext.User
-app.MapGet("/username", (HttpContext ctx) =>
+// Protected endpoint: requires login
+app.MapGet("/me", [Authorize] (HttpContext ctx) =>
 {
-    if (!ctx.User.Identity?.IsAuthenticated ?? true)
-        return Results.Unauthorized();
-
     var userName = ctx.User.Identity?.Name;
+    return Results.Ok(new { userName });
+});
 
-    return Results.Ok(userName);
+// Optional logout
+app.MapGet("/logout", async (HttpContext ctx) =>
+{
+    await ctx.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    return Results.Ok("Logged out successfully");
 });
 
 app.Run();
-
-

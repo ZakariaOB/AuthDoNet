@@ -48,3 +48,34 @@ app.MapGet("/login", (HttpContext ctx) =>
         }
         ```
 
+### 🔐 What is `"auth-cookie"` in `CreateProtector("auth-cookie")`?
+
+- `"auth-cookie"` is a **purpose string** used when creating a data protector with `IDataProtectionProvider`.
+- It defines a **unique encryption scope**, ensuring that only code using the *same* purpose can decrypt the data.
+- This adds a layer of **security isolation** within your application.
+
+#### ✅ Key Points:
+- **Not** the actual name of the cookie.
+- Acts like a **namespace** for encryption.
+- Ensures that data encrypted with `"auth-cookie"` can **only be decrypted** using the same purpose.
+
+#### 🔄 Example:
+```csharp
+var protector1 = idp.CreateProtector("auth-cookie");
+var protector2 = idp.CreateProtector("reset-token");
+
+var encrypted = protector1.Protect("hello");
+var decrypted = protector1.Unprotect(encrypted); // ✅ Works
+var fail = protector2.Unprotect(encrypted);      // ❌ Throws exception
+```
+
+#### Using the protector idea
+
+- This can solve some issues of the previous implementation
+  - The cookie is protected
+- But we still need to do this everywhere
+- What about picking a different cookie for a different endpoint
+- A clean up will microsoft implementation .
+
+
+

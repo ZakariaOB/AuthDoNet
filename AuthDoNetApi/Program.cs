@@ -1,11 +1,13 @@
+using Microsoft.AspNetCore.DataProtection;
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDataProtection();
 
 var app = builder.Build();
 
-
-app.MapGet("/username", (HttpContext ctx) =>
+app.MapGet("/username", (HttpContext ctx, IDataProtectionProvider idp) =>
 {
-    var cookieHeader = ctx.Request.Headers["Cookie"].ToString();
+    var cookieHeader = ctx.Request.Headers.Cookie.ToString();
 
     // Split all cookies by ';' and trim spaces
     var cookies = cookieHeader
@@ -16,19 +18,27 @@ app.MapGet("/username", (HttpContext ctx) =>
     var authCookie = cookies.FirstOrDefault(c => c.StartsWith("auth="));
 
     if (authCookie == null)
+    {
         return Results.Unauthorized();
+    }
 
-    var userCookie = authCookie.Split('=').Last(); // usr:zakaria
-    var userName = userCookie.Split(':').Last();   // zakaria
+    string userCookie = authCookie.Split('=').Last();
+    string userName = userCookie.Split(':').Last();
 
-    return Results.Ok(userName);
+    IDataProtector protector = idp.CreateProtector("auth-cookie");
+    string unprotectedUserName = protector.Unprotect(userName);
+
+    return Results.Ok(unprotectedUserName);
 });
 
 
-app.MapGet("/login", (HttpContext ctx) =>
+app.MapGet("/login", (HttpContext ctx, IDataProtectionProvider idp) =>
 {
-    ctx.Response.Headers["set-cookie"] = "auth=usr:zakaria";
-    return "ok";
+    var protector = idp.CreateProtector("auth-cookie");
+
+    ctx.Response.Headers.SetCookie = $"auth={protector.Protect("usr:zakaria")}";
+
+    return "loginc success";
 });
 
 app.Run();

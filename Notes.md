@@ -76,6 +76,26 @@ var fail = protector2.Unprotect(encrypted);      // ❌ Throws exception
 - But we still need to do this everywhere
 - What about picking a different cookie for a different endpoint
 - A clean up will microsoft implementation .
+- Edge cases and security and browser specific cookie implementations
+
+
+### 🔐 ClaimsPrincipal & ClaimsIdentity Summary
+
+- `HttpContext.User` is a `ClaimsPrincipal` representing the current user.
+- A `ClaimsPrincipal` contains one or more `ClaimsIdentity` instances.
+- `User.Identity` refers to the first authenticated identity.
+
+#### ✅ Common Access
+- `User.Identity.Name` → returns value from `ClaimTypes.Name`
+- `User.Identity.IsAuthenticated` → true if the identity is authenticated
+- `User.FindFirst(ClaimTypes.Role)?.Value` → direct access to claims
+
+#### 👥 Multiple Identities
+- `ClaimsPrincipal` can hold multiple identities (e.g., from Google and local login).
+- Useful in federated authentication or multi-factor scenarios.
+
+- By default, `User.Identity` uses the first authenticated identity.
+
 
 
 

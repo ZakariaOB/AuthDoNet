@@ -68,6 +68,36 @@ app.MapGet("/unsecure", (HttpContext ctx) =>
     return Results.Ok(userName);
 });
 
+app.MapPost("/login-role", async (HttpContext context, string username) =>
+{
+    // Fake logic: map username to roles
+    var role = username.ToLower() switch
+    {
+        "zakaria" => "Africain",
+        "john" => "American",
+        _ => "Guest"
+    };
+
+    var claims = new List<Claim>
+    {
+        new (ClaimTypes.Name, username),
+        new (ClaimTypes.Role, role)
+    };
+
+    var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+    var principal = new ClaimsPrincipal(identity);
+
+    await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
+    return Results.Ok($"Logged in as {username} with role: {role}");
+});
+
+app.MapGet("/africa", [Authorize(Roles = "Africain")] () =>
+{
+    return Results.Ok("Hello, Africain!");
+});
+
+
 // Optional logout
 app.MapGet("/logout", async (HttpContext ctx) =>
 {

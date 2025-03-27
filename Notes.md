@@ -132,3 +132,40 @@ var fail = protector2.Unprotect(encrypted);      // ❌ Throws exception
     ```
 
 
+## Role based authorization
+
+##### Summary: How `[Authorize(Roles = "...")]` Works in Minimal API
+
+```csharp
+app.MapGet("/africa", [Authorize(Roles = "Africain")] () =>
+{
+    return Results.Ok("Hello, Africain!");
+});
+```
+
+---
+
+##### Request Flow
+
+1. User sends a request to `/africa`
+2. `UseAuthentication()` parses the auth token or cookie and populates `HttpContext.User`
+3. `UseAuthorization()` runs and checks `[Authorize(Roles = "Africain")]`
+4. If user has the role `"Africain"`:
+   - Access granted → returns `200 OK`
+5. If not:
+   - Returns `401 Unauthorized` (if not logged in)  
+   - Returns `403 Forbidden` (if logged in but wrong role)
+
+---
+
+##### What It Checks Internally
+
+Looks for this claim:
+
+```csharp
+new Claim(ClaimTypes.Role, "Africain")
+```
+Found in:
+- JWT token (for token-based authentication)
+- Auth cookie (for cookie-based authentication)
+

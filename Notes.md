@@ -169,3 +169,22 @@ Found in:
 - JWT token (for token-based authentication)
 - Auth cookie (for cookie-based authentication)
 
+## Authentication Schema
+
+- **OAuth** itself is a protocol for delegating authorization, not managing sessions — but in ASP.NET Core, it works together with cookies to manage the logged-in session after authentication.
+  
+- In real-world applications, you often have multiple authentication schemes because different parts of the system require different ways to authenticate users. Let’s walk through how you can enrich your app with multiple schemes, with a real-world scenario in mind.
+
+- The idea is quite simple , add a new authentication shcema using oauth and make the example helpful to understand .
+
+- When to Use **Challenge()**
+  - Trigger an external login (like Google, AzureAD, or your MockOAuth)
+  - Redirect unauthenticated users to an external identity provider
+  - Use Challenge() when you want to start the login flow manually
+
+- The example is working but setting **OnCreatingTicket**
+
+- The steps are
+  - Challenge using oauth mock lab using oauth protocol
+  - Fill the email claim and make IsAuthenticated a true
+  - the Authorize will work now and you can then get and use the email claim 

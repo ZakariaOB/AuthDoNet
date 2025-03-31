@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using System.Net.Http.Headers;
 using System.Security.Claims;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +14,34 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         //options.LoginPath = "/login"; // optional redirect for [Authorize]
         options.Cookie.Name = "auth"; // cookie name
         options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+    }).AddOAuth("MockOAuth", options =>
+    {
+        options.ClientId = "dummy-client";
+        options.ClientSecret = "dummy-secret";
+        options.AuthorizationEndpoint = "https://oauth.wiremockapi.cloud/oauth/authorize";
+        options.TokenEndpoint = "https://oauth.wiremockapi.cloud/oauth/token";
+        options.UserInformationEndpoint = "https://oauth.wiremockapi.cloud/userinfo";
+
+        options.CallbackPath = "/signin-oauth";
+
+        options.SaveTokens = true;
+        options.ClaimActions.MapJsonKey(ClaimTypes.Email, "email");
+
+        options.Events.OnCreatingTicket = async context =>
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
+
+            var response = await context.Backchannel.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            using var user = JsonDocument.Parse(json);
+
+            context.RunClaimActions(user.RootElement);
+        };
+
+        // options.ClaimActions.MapAll();
     });
 
 builder.Services.AddAuthorizationBuilder()
@@ -103,6 +133,19 @@ app.MapGet("/logout", async (HttpContext ctx) =>
 {
     await ctx.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     return Results.Ok("Logged out successfully");
+});
+
+
+app.MapGet("/login-mock", (HttpContext context) =>
+{
+    var props = new AuthenticationProperties { RedirectUri = "/" };
+    return Results.Challenge(props, new[] { "MockOAuth" });
+});
+
+app.MapGet("/secure", [Authorize] (HttpContext context) =>
+{
+    string email = context.User.FindFirst(ClaimTypes.Email)?.Value;
+    return Results.Ok($"Welcome, {email}!");
 });
 
 app.Run();

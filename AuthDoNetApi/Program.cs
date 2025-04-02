@@ -127,14 +127,12 @@ app.MapGet("/africa", [Authorize(Roles = "Africain")] () =>
     return Results.Ok("Hello, Africain!");
 });
 
-
 // Optional logout
 app.MapGet("/logout", async (HttpContext ctx) =>
 {
     await ctx.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     return Results.Ok("Logged out successfully");
 });
-
 
 app.MapGet("/login-mock", (HttpContext context) =>
 {

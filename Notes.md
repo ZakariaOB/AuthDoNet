@@ -188,3 +188,14 @@ Found in:
   - Challenge using oauth mock lab using oauth protocol
   - Fill the email claim and make IsAuthenticated a true
   - the Authorize will work now and you can then get and use the email claim 
+
+
+
+## Identity management
+
+- Identity management is the set of tools and services that .NET provides to manage user accounts, authentication (who you are), and authorization (what you can do).
+- Always use password built in password hashers .
+- An authentication schema is a only a key that will point to a Handler .
+- If you are not able to verify the provided password just return a generic error without indicating the failure reason (Security !!)
+
+- Todo : promote function
